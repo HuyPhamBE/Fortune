@@ -1,4 +1,5 @@
 ﻿using Fortune.Repository.Basic;
+using Fortune.Repository.DBContext;
 using Fortune.Repository.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -11,6 +12,9 @@ namespace Fortune.Repository
 {
     public class PlanRepository:GenericRepository<Plan>
     {
+        public PlanRepository(FortuneContext context) : base(context)
+        {
+        }
         public async Task<Plan> GetPlanByIdAsync(Guid planId)
         {
             return await _context.Plans.FindAsync(planId);

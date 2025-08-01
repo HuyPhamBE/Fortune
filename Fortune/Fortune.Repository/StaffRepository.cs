@@ -1,4 +1,5 @@
 ﻿using Fortune.Repository.Basic;
+using Fortune.Repository.DBContext;
 using Fortune.Repository.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -11,6 +12,9 @@ namespace Fortune.Repository
 {
     public class StaffRepository:GenericRepository<Staff>
     {
+        public StaffRepository(FortuneContext context) : base(context)
+        {
+        }
         private readonly UserRepository _userRepository;
         public async Task<Staff> GetStaffByUsernameAsync(string userName)
         {

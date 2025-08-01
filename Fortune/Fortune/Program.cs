@@ -13,7 +13,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 var jwtKey = builder.Configuration["Jwt:Key"];
-Console.WriteLine($"[DEBUG] JWT Key loaded? {(!string.IsNullOrEmpty(jwtKey))}");
+
 if (string.IsNullOrEmpty(jwtKey))
     throw new Exception("JWT Key was not found in configuration.");
 

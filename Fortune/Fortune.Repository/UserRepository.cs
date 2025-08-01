@@ -1,4 +1,5 @@
 ﻿using Fortune.Repository.Basic;
+using Fortune.Repository.DBContext;
 using Fortune.Repository.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -11,6 +12,9 @@ namespace Fortune.Repository
 {
     public class UserRepository:GenericRepository<User>
     {
+        public UserRepository(FortuneContext context) : base(context)
+        {
+        }
         public async Task<User> GetUserByUsernameAsync(string userName)
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.UserName == userName);

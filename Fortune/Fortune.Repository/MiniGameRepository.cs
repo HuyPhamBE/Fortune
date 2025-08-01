@@ -1,4 +1,5 @@
 ﻿using Fortune.Repository.Basic;
+using Fortune.Repository.DBContext;
 using Fortune.Repository.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,9 @@ namespace Fortune.Repository
 {
     public class MiniGameRepository : GenericRepository<Mini_game>
     {
+        public MiniGameRepository(FortuneContext context) : base(context)
+        {
+        }
         public async Task<Mini_game?> GetMiniGameByIdAsync(Guid id)
         {
             return await _context.Mini_games

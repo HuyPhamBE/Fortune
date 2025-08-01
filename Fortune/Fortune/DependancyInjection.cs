@@ -1,4 +1,5 @@
 ﻿using Fortune.Repository;
+using Fortune.Repository.Basic;
 using Fortune.Repository.DBContext;
 using Fortune.Services;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,8 @@ namespace Fortune
         {
             services.AddSingleton<IConfiguration>(configuration);
             services.AddDatabase(configuration);
+
+            services.AddScoped(typeof(GenericRepository<>));
 
             services.AddScoped<UserRepository>();
             services.AddScoped<BookingRepository>();
@@ -28,7 +31,7 @@ namespace Fortune
         public static void AddDatabase(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<FortuneContext>(options =>
-                        options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                        options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
         }
     }
 }

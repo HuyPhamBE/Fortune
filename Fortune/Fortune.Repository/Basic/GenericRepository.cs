@@ -17,11 +17,6 @@ namespace Fortune.Repository.Basic
             _context = context;
         }
 
-        public GenericRepository()
-        {
-            _context = new FortuneContext();
-        }
-
         public List<T> GetAll()
         {
             return _context.Set<T>().ToList();

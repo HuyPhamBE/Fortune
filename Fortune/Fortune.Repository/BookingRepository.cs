@@ -1,4 +1,5 @@
 ﻿using Fortune.Repository.Basic;
+using Fortune.Repository.DBContext;
 using Fortune.Repository.ModelExtension;
 using Fortune.Repository.Models;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,9 @@ namespace Fortune.Repository
 {
     public class BookingRepository : GenericRepository<Booking>
     {
+        public BookingRepository(FortuneContext context) : base(context)
+        {
+        }
         public async Task<List<Booking>> GetAllBookingsAsync()
         {
             return await _context.Bookings.ToListAsync();
