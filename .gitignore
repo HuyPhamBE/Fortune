@@ -22,7 +22,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
-
+.vs/
 appsettings.json
 # .NET Core
 project.lock.json
