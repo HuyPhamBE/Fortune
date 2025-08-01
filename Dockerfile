@@ -2,12 +2,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copy entire project folder structure
-COPY ./Fortune ./Fortune
-
-# Restore
+# Copy only project files and restore — this layer will be cached
+COPY ./Fortune/Fortune/Fortune.csproj ./Fortune/Fortune/
 RUN dotnet restore Fortune/Fortune/Fortune.csproj
 
+COPY ./Fortune ./Fortune
 # Build & publish
 WORKDIR /app/Fortune/Fortune
 RUN dotnet publish -c Release -o /out /p:UseAppHost=false
