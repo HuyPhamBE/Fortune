@@ -70,23 +70,22 @@ namespace Fortune.Controllers
         #region upload
         [HttpPost("upload")]
         [Authorize(Roles = "3,2,1")]
-        public async Task<IActionResult> UploadFile(IFormFile file, string mgName, string mgDes)
+        public async Task<IActionResult> UploadFile(IFormFile file, string mgName, string mgDes,string publicId)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
 
             try
             {
-                var result = await miniGameService.UploadMiniGameAsync(file, mgName, mgDes);
+                var result = await miniGameService.UploadMiniGameAsync(file, mgName, mgDes,publicId);
 
                 return Ok(new
                 {
                     Success = true,
                     MiniGameId = result.miniGame_id,
                     FileName = result.FileName,
-                    FileSize = result.FileData?.Length ?? 0,
                     Message = "File uploaded successfully",
-                    DownloadUrl = $"/api/minigame/download/{result.miniGame_id}"
+                    DownloadUrl = result.FileUrl // Cloudinary direct link
                 });
             }
             catch (Exception ex)
@@ -106,16 +105,14 @@ namespace Fortune.Controllers
         public async Task<IActionResult> Download(Guid id)
         {
             var miniGame = await miniGameService.GetMiniGameAsync(id);
-            if (miniGame == null || miniGame.FileData == null || string.IsNullOrEmpty(miniGame.FileName))
-            {
+            if (miniGame == null || string.IsNullOrEmpty(miniGame.FileUrl))
                 return NotFound("File not found.");
-            }
 
-            return File(
-                fileContents: miniGame.FileData,
-                contentType: miniGame.FileType ?? "application/octet-stream",
-                fileDownloadName: miniGame.FileName
-            );
+            using var httpClient = new HttpClient();
+            var fileBytes = await httpClient.GetByteArrayAsync(miniGame.FileUrl);
+
+            return File(fileBytes, miniGame.FileType ?? "application/octet-stream", miniGame.FileName);
+
         }
         #endregion
     }

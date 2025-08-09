@@ -1,3 +1,4 @@
+using CloudinaryDotNet;
 using Fortune;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -5,6 +6,18 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddSingleton(provider =>
+{
+    var config = builder.Configuration.GetSection("Cloudinary");
+    var account = new Account(
+        config["CloudName"],
+        config["ApiKey"],
+        config["ApiSecret"]
+    );
+    return new Cloudinary(account);
+});
+
 builder.Services.AddDI(builder.Configuration);
 // Add services to the container.
 

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Fortune.Repository.Models;
@@ -27,12 +28,15 @@ public partial class Booking
     public Guid staff_id { get; set; }
 
     [InverseProperty("booking")]
+    [JsonIgnore]
     public virtual ICollection<Mini_game> Mini_games { get; set; } = new List<Mini_game>();
 
     [InverseProperty("booking")]
+    [JsonIgnore]
     public virtual ICollection<Plan> Plans { get; set; } = new List<Plan>();
 
     [ForeignKey("user_id")]
     [InverseProperty("Bookings")]
+    [JsonIgnore]
     public virtual User user { get; set; }
 }

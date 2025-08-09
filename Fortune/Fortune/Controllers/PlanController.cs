@@ -67,13 +67,20 @@ namespace Fortune.Controllers
         }
         [HttpPost("upload")]
         [Authorize(Roles = "3")]
-        public async Task<IActionResult> UploadPlan(IFormFile file, string planName,string planDes)
+        public async Task<IActionResult> UploadPlan(IFormFile file, string planName,string planDes, string publicId)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
 
-            var result = await planService.UploadPlanAsync(file, planName, planDes);
-            return Ok(result);
+            var result = await planService.UploadPlanAsync(file, planName, planDes,publicId);
+            return Ok(new
+            {
+                Success = true,
+                PlanId = result.Plan_id,
+                FileName = result.FileName,
+                Message = "File uploaded successfully",
+                DownloadUrl = result.FileUrl // Cloudinary direct link
+            });
         }
         [HttpGet("download/{id}")]
         [Authorize(Roles = "3,2,1")]
@@ -84,8 +91,10 @@ namespace Fortune.Controllers
             {
                 return NotFound();
             }
-            var fileStream = new MemoryStream(plan.FileData);
-            return File(fileStream, plan.FileType, plan.FileName);
+            using var httpClient = new HttpClient();
+            var fileBytes = await httpClient.GetByteArrayAsync(plan.FileUrl);
+
+            return File(fileBytes, plan.FileType ?? "application/octet-stream", plan.FileName);
         }
     }
 }
