@@ -67,6 +67,7 @@ namespace Fortune.Controllers
                 new(ClaimTypes.Name, user.UserName),
                 //new(ClaimTypes.Email, systemUserAccount.Email),
                 new(ClaimTypes.Role, user.Role.ToString()),
+                new(ClaimTypes.NameIdentifier, user.user_id.ToString())
                     },
                     expires: DateTime.Now.AddMinutes(120),
                     signingCredentials: credentials

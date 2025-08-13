@@ -27,14 +27,18 @@ public partial class Booking
 
     public Guid staff_id { get; set; }
 
-    [InverseProperty("booking")]
-    [JsonIgnore]
-    public virtual ICollection<Mini_game> Mini_games { get; set; } = new List<Mini_game>();
+    public Guid? minigame_id { get; set; }
+    public Guid? plan_id { get; set; }
 
-    [InverseProperty("booking")]
+    [ForeignKey(nameof(minigame_id))]
     [JsonIgnore]
-    public virtual ICollection<Plan> Plans { get; set; } = new List<Plan>();
+    [InverseProperty("Bookings")]
+    public virtual Mini_game Mini_game { get; set; }
 
+    [ForeignKey(nameof(plan_id))]
+    [JsonIgnore]
+    [InverseProperty("Bookings")]
+    public virtual Plan Plan { get; set; }
     [ForeignKey("user_id")]
     [InverseProperty("Bookings")]
     [JsonIgnore]

@@ -12,10 +12,12 @@ namespace Fortune.Controllers
     public class PlanController : ControllerBase
     {
         private readonly IPlanService planService;
+        private readonly IBookingService bookingService;
 
-        public PlanController(IPlanService planService)
+        public PlanController(IPlanService planService,IBookingService bookingService)
         {
             this.planService = planService;
+            this.bookingService = bookingService;
         }
         [HttpGet]
         [Authorize(Roles = "3,2,1")]
@@ -86,15 +88,36 @@ namespace Fortune.Controllers
         [Authorize(Roles = "3,2,1")]
         public async Task<IActionResult> DownloadPlan(Guid id)
         {
+            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
             var plan = await planService.GetPlanByIdAsync(id);
             if (plan == null)
             {
                 return NotFound();
             }
             using var httpClient = new HttpClient();
+            try { 
             var fileBytes = await httpClient.GetByteArrayAsync(plan.FileUrl);
+                var booking = new Booking
+                {
+                    booking_id = Guid.NewGuid(),
+                    description = $"Download plan: {plan.Plan_name}",
+                    type = true,
+                    status = 1,
+                    minigame_id =null,
+                    plan_id =plan.Plan_id,
+                    user_id = userId
+                };
+                await bookingService.CreateBookingAsync(booking);
+                plan.count++;
+                await planService.UpdatePlanAsync(plan);
+                return File(fileBytes, plan.FileType ?? "application/octet-stream", plan.FileName);
+            }
+            catch (HttpRequestException ex)
+            {
 
-            return File(fileBytes, plan.FileType ?? "application/octet-stream", plan.FileName);
+                Console.WriteLine($"Download failed: {ex.Message}");
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError, "Download failed. Please try again later.");
         }
     }
 }

@@ -26,8 +26,6 @@ public partial class Mini_game
     [Column("mg_des")]
     public string MG_des { get; set; }
 
-    public Guid? booking_id { get; set; }
-
     public byte[] picture { get; set; }
 
     public int count { get; set; }
@@ -43,9 +41,8 @@ public partial class Mini_game
     public string FileUrl { get; set; }
     [Column("PublicId")]
     public string PublicId { get; set; }
-
-    [ForeignKey("booking_id")]
-    [InverseProperty("Mini_games")]
+    [InverseProperty(nameof(Booking.Mini_game))]
     [JsonIgnore]
-    public virtual Booking booking { get; set; }
+    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
 }

@@ -13,10 +13,12 @@ namespace Fortune.Controllers
     public class MiniGameController : ControllerBase
     {
         private readonly IMiniGameService miniGameService;
+        private readonly IBookingService bookingService;
 
-        public MiniGameController(IMiniGameService miniGameService)
+        public MiniGameController(IMiniGameService miniGameService,IBookingService bookingService)
         {
             this.miniGameService = miniGameService;
+            this.bookingService = bookingService;
         }
         [HttpGet]
         [Authorize(Roles = "3,2,1")]
@@ -104,15 +106,36 @@ namespace Fortune.Controllers
         [Authorize(Roles = "3,2,1")]
         public async Task<IActionResult> Download(Guid id)
         {
+            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
             var miniGame = await miniGameService.GetMiniGameAsync(id);
             if (miniGame == null || string.IsNullOrEmpty(miniGame.FileUrl))
                 return NotFound("File not found.");
 
             using var httpClient = new HttpClient();
+            try
+            {
             var fileBytes = await httpClient.GetByteArrayAsync(miniGame.FileUrl);
+                var booking = new Booking
+                {
+                    booking_id = Guid.NewGuid(),
+                    description = $"Download mini game: {miniGame.MG_name}",
+                    type = true,
+                    status = 1,
+                    minigame_id = miniGame.miniGame_id,
+                    plan_id = null,
+                    user_id= userId
+                };
+                await bookingService.CreateBookingAsync(booking);
+                miniGame.count++;
+                await miniGameService.UpdateMiniGameAsync(miniGame);
+                return File(fileBytes, miniGame.FileType ?? "application/octet-stream", miniGame.FileName);
+            }
+            catch (HttpRequestException ex)
+            {
 
-            return File(fileBytes, miniGame.FileType ?? "application/octet-stream", miniGame.FileName);
-
+                Console.WriteLine($"Download failed: {ex.Message}");
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError, "Download failed. Please try again later.");
         }
         #endregion
     }

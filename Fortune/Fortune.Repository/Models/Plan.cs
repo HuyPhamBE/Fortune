@@ -26,10 +26,8 @@ public partial class Plan
     [Column("plan_des")]
     public string Plan_des { get; set; }
 
-    public Guid booking_id { get; set; }
-
     public int count { get; set; }
-  
+
     [StringLength(255)]
     [Column("filename")]
     public string FileName { get; set; }
@@ -41,9 +39,8 @@ public partial class Plan
     public string FileUrl { get; set; }
     [Column("PublicId")]
     public string PublicId { get; set; }
-
-    [ForeignKey("booking_id")]
-    [InverseProperty("Plans")]
+    [InverseProperty(nameof(Booking.Plan))]
     [JsonIgnore]
-    public virtual Booking booking { get; set; }
+    public virtual ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
 }

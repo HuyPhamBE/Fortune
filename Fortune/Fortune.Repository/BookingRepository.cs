@@ -23,9 +23,7 @@ namespace Fortune.Repository
         public async Task<Booking> GetBookingByIdAsync(Guid bookingId)
         {
             return await _context.Bookings
-                .Include(b => b.user)
-                .Include(b => b.Mini_games)
-                .Include(b => b.Plans)
+                .Include(b => b.user)                                
                 .FirstOrDefaultAsync(b => b.booking_id == bookingId);
         }
         public async Task<List<Booking>> GetBookingsByUserIdAsync(Guid userId)
@@ -33,8 +31,6 @@ namespace Fortune.Repository
             return await _context.Bookings
                 .Where(b => b.user_id == userId)
                 .Include(b => b.user)
-                .Include(b => b.Mini_games)
-                .Include(b => b.Plans)
                 .ToListAsync();
         }
         public async Task<List<Booking>> GetBookingsByStaffIdAsync(Guid staffId)
@@ -42,8 +38,6 @@ namespace Fortune.Repository
             return await _context.Bookings
                 .Where(b => b.staff_id == staffId)
                 .Include(b => b.user)
-                .Include(b => b.Mini_games)
-                .Include(b => b.Plans)
                 .ToListAsync();
         }
        public async Task<PaginationResult<Booking>> SearchWithPagging(

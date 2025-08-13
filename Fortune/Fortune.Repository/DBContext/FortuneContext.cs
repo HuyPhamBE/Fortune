@@ -43,9 +43,7 @@ public partial class FortuneContext : DbContext
         {
             entity.HasKey(e => e.miniGame_id).HasName("mini game_minigame_id_primary");
 
-            entity.Property(e => e.miniGame_id).ValueGeneratedNever();
-
-            entity.HasOne(d => d.booking).WithMany(p => p.Mini_games).HasConstraintName("mini game_booking_id_foreign");
+            entity.Property(e => e.miniGame_id).ValueGeneratedNever();           
         });
 
         modelBuilder.Entity<Plan>(entity =>
@@ -53,10 +51,6 @@ public partial class FortuneContext : DbContext
             entity.HasKey(e => e.Plan_id).HasName("plan_plan_id_primary");
 
             entity.Property(e => e.Plan_id).ValueGeneratedNever();
-
-            entity.HasOne(d => d.booking).WithMany(p => p.Plans)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("plan_booking_id_foreign");
         });
 
         modelBuilder.Entity<Staff>(entity =>
