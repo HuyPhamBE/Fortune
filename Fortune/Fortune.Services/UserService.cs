@@ -38,10 +38,18 @@ namespace Fortune.Services
             await userRepository.CreateAsync(user);
             return user;
         }
-        
+        public async Task<User> GetUserByNameAsync(string userName)
+        {
+            return await userRepository.GetUserByUsernameAsync(userName);
+        }
         public async Task<List<User>> GetAllUserAccounts()
         {
             return await userRepository.GetAllUserAccounts();
+        }
+        public async Task<User> UpdateUserAsync(User user)
+        {
+            await userRepository.UpdateAsync(user);
+            return user;
         }
     }
 }

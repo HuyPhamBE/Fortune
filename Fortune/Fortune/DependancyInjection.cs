@@ -20,11 +20,15 @@ namespace Fortune
             services.AddScoped<PlanRepository>();            
             services.AddScoped<MiniGameRepository>();
             services.AddScoped<StaffRepository>();
+            services.AddScoped<PackageRepository>();
+            services.AddScoped<OrderRepository>();
 
             services.AddScoped<IBookingService, BookingService>();
             services.AddScoped<IPlanService, PlanService>();
             services.AddScoped<IMiniGameService, MiniGameService>();
-            services.AddScoped<IStaffService, StaffService>();
+            services.AddScoped<IStaffService, StaffService>();            
+            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IPackageService, PackageService>();
             services.AddScoped<UserService>();
 
         }

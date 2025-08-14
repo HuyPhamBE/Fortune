@@ -4,8 +4,19 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Net.payOS;
 
 var builder = WebApplication.CreateBuilder(args);
+
+   var config = builder.Configuration.GetSection("PayOS");
+    var payOS = new PayOS(
+        config["ClientId"],
+        config["ApiKey"],
+        config["ChecksumKey"]
+    );
+
+//await payOS.confirmWebhook("https://fortune-wpfl.onrender.com/api/payos/webhook");
+builder.Services.AddSingleton(payOS);
 
 builder.Services.AddSingleton(provider =>
 {

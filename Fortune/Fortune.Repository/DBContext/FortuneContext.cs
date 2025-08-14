@@ -25,7 +25,8 @@ public partial class FortuneContext : DbContext
     public virtual DbSet<Staff> Staff { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
-
+    public virtual DbSet<Package> Packages { get; set; }
+    public virtual DbSet<Order> Orders{ get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Booking>(entity =>
