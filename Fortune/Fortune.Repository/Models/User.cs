@@ -12,7 +12,7 @@ namespace Fortune.Repository.Models;
 public partial class User
 {
     [Key]
-    public Guid user_id { get; set; }
+    public Guid user_id { get; set; }=Guid.NewGuid();
 
     [Required]
     [StringLength(255)]

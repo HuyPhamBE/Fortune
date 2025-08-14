@@ -95,7 +95,7 @@ namespace Fortune.Controllers
                 IsActive = true // Assuming the user is active by default
             };
 
-            userService.CreateUserAsync(user, userRegisterRequest.Password);
+           await userService.CreateUserAsync(user, userRegisterRequest.Password);
             return true;
         }
 

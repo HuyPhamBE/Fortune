@@ -1,4 +1,5 @@
-﻿using Fortune.Repository.Models;
+﻿using Fortune.DTOs;
+using Fortune.Repository.Models;
 using Fortune.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -37,16 +38,29 @@ namespace Fortune.Controllers
         }   
         [HttpPost]
         [Authorize(Roles = "3,2,1")]
-        public async Task<IActionResult> CreateBooking([FromBody] Booking booking)
+        public async Task<IActionResult> CreateBooking([FromBody] BookingDTO booking)
         {
             if (booking == null)
             {
                 return BadRequest("Booking cannot be null.");
             }
-            var result = await bookingService.CreateBookingAsync(booking);
+            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+            // Map BookingDTO to Booking model
+            var bookingModel = new Booking
+            {
+                booking_id = Guid.NewGuid(),
+                description = booking.description,
+                type = booking.type,
+                user_id = userId,
+                status = booking.status,
+                staff_id = booking.staff_id,
+                minigame_id = booking.minigame_id,
+                plan_id = booking.plan_id,
+            };
+            var result = await bookingService.CreateBookingAsync(bookingModel);
             if (result > 0)
             {
-                return CreatedAtAction(nameof(GetBookingById), new { id = booking.booking_id }, booking);
+                return CreatedAtAction(nameof(GetBookingById), new { id = bookingModel.booking_id }, booking);
             }
             return BadRequest("Failed to create booking.");
         }
