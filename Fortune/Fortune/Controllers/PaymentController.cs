@@ -22,7 +22,7 @@ namespace Fortune.Controllers
         public async Task<IActionResult> Checkout(Guid id, [FromQuery] string? guestEmail)
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            
+
             try
             {
                 var (checkoutUrl, orderCode) = await paymentService.CreateOrderAsync(id, userId, guestEmail);
@@ -36,7 +36,6 @@ namespace Fortune.Controllers
         [HttpPost("webhook")]
         public async Task<IActionResult> Webhook([FromBody] Net.payOS.Types.WebhookType payload)
         {
-
             try
             {
                 logger.LogInformation("Webhook endpoint called");
@@ -47,17 +46,28 @@ namespace Fortune.Controllers
                     return BadRequest(new { message = "Payload is null" });
                 }
 
+                // Log payload structure for debugging
+                try
+                {
+                    var payloadJson = Newtonsoft.Json.JsonConvert.SerializeObject(payload, Newtonsoft.Json.Formatting.Indented);
+                    logger.LogInformation($"Webhook payload structure: {payloadJson}");
+                }
+                catch (Exception logEx)
+                {
+                    logger.LogWarning($"Could not serialize payload for logging: {logEx.Message}");
+                }
+
                 var result = await paymentService.VerifyWebhook(payload);
 
                 if (result)
                 {
-                    logger.LogInformation("Webhook verified successfully");
-                    return Ok(new { message = "Webhook verified successfully" });
+                    logger.LogInformation("✅ Webhook processed successfully");
+                    return Ok(new { message = "Webhook processed successfully" });
                 }
                 else
                 {
-                    logger.LogWarning("Webhook verification failed");
-                    return BadRequest(new { message = "Webhook verification failed" });
+                    logger.LogWarning("❌ Webhook processing failed");
+                    return BadRequest(new { message = "Webhook processing failed" });
                 }
             }
             catch (Exception ex)
@@ -65,6 +75,6 @@ namespace Fortune.Controllers
                 logger.LogError(ex, $"Error processing webhook: {ex.Message}");
                 return BadRequest(new { message = $"Webhook processing error: {ex.Message}" });
             }
-        }      
+        }
     }
 }
