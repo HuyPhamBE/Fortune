@@ -122,6 +122,7 @@ namespace Fortune.Controllers
                 user.Email,
                 user.Phone,
                 user.FullName,
+                user.Role,
             });
         }
         [HttpPost("update-user")]
