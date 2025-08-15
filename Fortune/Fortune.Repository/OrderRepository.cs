@@ -17,7 +17,9 @@ namespace Fortune.Repository
         }
         public async Task<List<Order>> GetAllOrdersAsync()
         {
-            return await _context.Orders.ToListAsync();
+            return await _context.Orders
+                .Include(o=> o.User)
+                .ToListAsync();
         }
         public async Task<Order> GetOrderByIdAsync(Guid orderId)
         {
@@ -37,6 +39,13 @@ namespace Fortune.Repository
         {
             return await _context.Orders
                 .Where(o => o.UserId == userId)
+                .ToListAsync();
+        }
+        public async Task<List<string?>> getPackageUserPurchased(Guid id)
+        {
+            return await _context.Orders
+                .Where(o => o.UserId == id && o.Status == OrderStatus.Paid)
+                .Select(o => o.Package.Name)
                 .ToListAsync();
         }
     }

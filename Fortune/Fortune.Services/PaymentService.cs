@@ -13,7 +13,8 @@ namespace Fortune.Services
     public interface IPaymentService
     {
         Task<(string checkoutUrl, long orderCode)> CreateOrderAsync(Guid packageId, string userId, string guestEmail);
-        Task<bool> VerifyWebhook(WebhookType payload);
+        Task<(bool success, string reason)> VerifyWebhook(WebhookType payload);
+
         Task<int> ClaimOrdersForUserAsync(Guid userId, string email);
     }
     public class PaymentService : IPaymentService
@@ -65,22 +66,42 @@ namespace Fortune.Services
             return (created.checkoutUrl, orderCode);
         }
 
-        async Task<bool> IPaymentService.VerifyWebhook(WebhookType payload)
+        public async Task<(bool success, string reason)> VerifyWebhook(WebhookType payload)
         {
             var data = payOS.verifyPaymentWebhookData(payload);
-            if (data != null && data.code == "00" && data.desc.Equals("Thành công", StringComparison.OrdinalIgnoreCase)) 
+            if (data == null)
             {
-                var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
-                if (order != null && order.Status != OrderStatus.Paid)
-                {
-                    order.Status = OrderStatus.Paid;
-                    order.PaidAt = DateTime.UtcNow;
-                    await orderRepository.UpdateAsync(order);
-                }
-                return true;
+                return (false, "Signature verification failed or payload invalid");
             }
-            return false;
+
+            if (data.code != "00")
+            {
+                return (false, $"Unexpected code: {data.code}");
+            }
+
+            if (!data.desc.Equals("Thành công", StringComparison.OrdinalIgnoreCase))
+            {
+                return (false, $"Unexpected description: {data.desc}");
+            }
+
+            var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
+            if (order == null)
+            {
+                return (false, $"Order not found for orderCode {data.orderCode}");
+            }
+
+            if (order.Status == OrderStatus.Paid)
+            {
+                return (false, "Order already marked as paid");
+            }
+
+            order.Status = OrderStatus.Paid;
+            order.PaidAt = DateTime.UtcNow;
+            await orderRepository.UpdateAsync(order);
+
+            return (true, "Order updated to Paid");
         }
+
         public async Task<int> ClaimOrdersForUserAsync(Guid userId, string email)
         {
             if (string.IsNullOrEmpty(email))

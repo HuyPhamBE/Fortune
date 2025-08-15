@@ -15,6 +15,8 @@ namespace Fortune.Repository.Models
         [Key]
         [Column("package_id")]
         public Guid package_Id { get; set; }
+        [Column("name")]
+        public string? Name { get; set; }
         [Required]
         public string description { get; set; }
         [Required]

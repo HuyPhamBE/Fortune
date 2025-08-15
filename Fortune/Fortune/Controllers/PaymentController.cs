@@ -35,17 +35,22 @@ namespace Fortune.Controllers
         {
             try
             {
-                var result = await paymentService.VerifyWebhook(payload);
-                if (result)
+                var (success, reason) = await paymentService.VerifyWebhook(payload);
+
+                if (success)
                 {
                     return Ok(new { message = "Webhook verified successfully" });
                 }
-                return BadRequest(new { message = "Webhook verification failed" });
+                else
+                {
+                    return BadRequest(new { message = $"Webhook verification failed: {reason}" });
+                }
             }
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
-        }        
+        }
+
     }
 }
