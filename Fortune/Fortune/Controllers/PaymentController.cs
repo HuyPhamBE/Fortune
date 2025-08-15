@@ -17,10 +17,7 @@ namespace Fortune.Controllers
         public async Task<IActionResult> Checkout(Guid id)
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                userId = null;
-            }
+            
             try
             {
                 var (checkoutUrl, orderCode) = await paymentService.CreateOrderAsync(id, userId);

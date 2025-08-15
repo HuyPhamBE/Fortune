@@ -30,7 +30,7 @@ namespace Fortune.Services
             this.orderRepository = orderRepository;
         }
 
-        async Task<(string checkoutUrl, long orderCode)> IPaymentService.CreateOrderAsync(Guid packageId,string userId)
+        async Task<(string checkoutUrl, long orderCode)> IPaymentService.CreateOrderAsync(Guid packageId, string userId)
         {
             var package = await packageRepository.GetPackageByIdAsync(packageId);
             if (package == null) throw new Exception("Package not found");
@@ -57,7 +57,7 @@ namespace Fortune.Services
                 PaymentLinkId = created.paymentLinkId,
                 Status = OrderStatus.Pending,
                 Amount = 1,
-                UserId=Guid.Parse(userId)
+                UserId = string.IsNullOrEmpty(userId) ? (Guid?)null : Guid.Parse(userId)
             };
             await orderRepository.CreateAsync(newOrder);
             return (created.checkoutUrl, orderCode);
