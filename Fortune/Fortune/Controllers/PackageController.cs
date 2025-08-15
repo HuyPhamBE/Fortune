@@ -17,14 +17,14 @@ namespace Fortune.Controllers
             this.packageService = packageService;
         }
         [HttpGet]
-        [Authorize(Roles = "3")]
+        [Authorize(Roles = "3,2,1")]
         public async Task<IActionResult> GetAllPackages()
         {
             var packages = await packageService.GetAllPackageAsync();
             return Ok(packages);
         }
         [HttpGet("{id}")]
-        [Authorize(Roles = "3")]
+        [Authorize(Roles = "3,2,1")]
         public async Task<IActionResult> GetPackageById(Guid id)
         {
             var package = await packageService.GetPackageByIdAsync(id);
