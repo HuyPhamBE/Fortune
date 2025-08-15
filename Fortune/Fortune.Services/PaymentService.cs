@@ -68,7 +68,7 @@ namespace Fortune.Services
         async Task<bool> IPaymentService.VerifyWebhook(WebhookType payload)
         {
             var data = payOS.verifyPaymentWebhookData(payload);
-            if (data != null && data.code == "00" && data.desc == "Thành công") 
+            if (data != null && data.code == "00" && data.desc.Equals("Thành công", StringComparison.OrdinalIgnoreCase)) 
             {
                 var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
                 if (order != null && order.Status != OrderStatus.Paid)
