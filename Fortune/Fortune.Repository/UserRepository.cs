@@ -23,5 +23,9 @@ namespace Fortune.Repository
         {
             return await _context.Users.ToListAsync();
         }
+        public async Task<bool> IsUserExistsAsync(string email)
+        {
+            return await _context.Users.AnyAsync(u => u.Email == email);
+        }
     }
 }

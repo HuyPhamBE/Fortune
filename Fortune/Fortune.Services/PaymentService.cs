@@ -12,8 +12,9 @@ namespace Fortune.Services
 {
     public interface IPaymentService
     {
-        Task<(string checkoutUrl, long orderCode)> CreateOrderAsync(Guid packageId, string userId);
+        Task<(string checkoutUrl, long orderCode)> CreateOrderAsync(Guid packageId, string userId, string guestEmail);
         Task<bool> VerifyWebhook(WebhookType payload);
+        Task<int> ClaimOrdersForUserAsync(Guid userId, string email);
     }
     public class PaymentService : IPaymentService
     {
@@ -30,14 +31,14 @@ namespace Fortune.Services
             this.orderRepository = orderRepository;
         }
 
-        async Task<(string checkoutUrl, long orderCode)> IPaymentService.CreateOrderAsync(Guid packageId, string userId)
+
+        async Task<(string checkoutUrl, long orderCode)> IPaymentService.CreateOrderAsync(Guid packageId, string userId, string guestEmail)
         {
             var package = await packageRepository.GetPackageByIdAsync(packageId);
             if (package == null) throw new Exception("Package not found");
 
             long orderCode = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             var item = new ItemData(package.description, 1, package.price);
-
             var paymentData = new PaymentData(
                     orderCode: orderCode,
                     amount: package.price,
@@ -48,7 +49,6 @@ namespace Fortune.Services
 
             var created = await payOS.createPaymentLink(paymentData);
 
-
             var newOrder = new Order
             {
                 OrderCode = orderCode,
@@ -56,8 +56,10 @@ namespace Fortune.Services
                 CheckoutUrl = created.checkoutUrl,
                 PaymentLinkId = created.paymentLinkId,
                 Status = OrderStatus.Pending,
-                Amount = 1,
-                UserId = string.IsNullOrEmpty(userId) ? (Guid?)null : Guid.Parse(userId)
+                Amount = package.price,
+                UserId = string.IsNullOrEmpty(userId) ? (Guid?)null : Guid.Parse(userId),
+                GuestEmail = guestEmail,
+                Description= $"Fortune payment for purchase {package.package_Id} for user {userId}"
             };
             await orderRepository.CreateAsync(newOrder);
             return (created.checkoutUrl, orderCode);
@@ -66,18 +68,34 @@ namespace Fortune.Services
         async Task<bool> IPaymentService.VerifyWebhook(WebhookType payload)
         {
             var data = payOS.verifyPaymentWebhookData(payload);
-            if (data != null && data.code == "00" && data.desc == "success") // Example condition
+            if (data != null && data.code == "00" && data.desc == "success") 
             {
                 var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
                 if (order != null && order.Status != OrderStatus.Paid)
                 {
                     order.Status = OrderStatus.Paid;
                     order.PaidAt = DateTime.UtcNow;
-
+                    await orderRepository.UpdateAsync(order);
                 }
                 return true;
             }
             return false;
         }
+        public async Task<int> ClaimOrdersForUserAsync(Guid userId, string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                throw new ArgumentException("Email cannot be null or empty", nameof(email));
+            var unclaimedOrders = await orderRepository.GetUnclaimedOrdersByEmailAsync(email);
+            if (!unclaimedOrders.Any())
+                return 0;
+            foreach (var order in unclaimedOrders)
+            {
+                order.UserId = userId;
+                order.GuestEmail = null; // clear guest link
+            }
+            await orderRepository.SaveAsync();
+            return unclaimedOrders.Count;
+
+        }  
     }
 }

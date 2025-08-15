@@ -33,10 +33,17 @@ namespace Fortune.Services
         }
         public async Task<User> CreateUserAsync(User user, string password)
         {
+            if(await userRepository.IsUserExistsAsync(user.Email))
+            {
+                throw new Exception("User with this email already exists.");
+            }
+            else
+            {
             user.Salt = PasswordHelper.GenerateSalt();
             user.Password = PasswordHelper.HashPassword(password,user.Salt);
             await userRepository.CreateAsync(user);
             return user;
+            }
         }
         public async Task<User> GetUserByNameAsync(string userName)
         {

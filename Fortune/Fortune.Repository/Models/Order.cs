@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -27,6 +28,9 @@ namespace Fortune.Repository.Models
         public Guid? UserId { get; set; }
         [Column("status")]
         public OrderStatus Status { get; set; } = OrderStatus.Pending;
+        [Column("GuestEmail")]
+        public string? GuestEmail { get; set; }
+
         [Column("checkouturl")]
         public string CheckoutUrl { get; set; }
         [Column("paymentlinkid")]

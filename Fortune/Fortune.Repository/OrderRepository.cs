@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Fortune.Repository
 {
-    public class OrderRepository:GenericRepository<Order>
+    public class OrderRepository : GenericRepository<Order>
     {
         public OrderRepository(FortuneContext context) : base(context)
         {
@@ -26,6 +26,18 @@ namespace Fortune.Repository
         public async Task<Order> GetOrdersByOrderCodeAsync(long orderCode)
         {
             return await _context.Orders.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
+        }
+        public async Task<List<Order>> GetUnclaimedOrdersByEmailAsync(string email)
+        {
+            return await _context.Orders
+                .Where(o => o.UserId == null && o.GuestEmail == email)
+                .ToListAsync();
+        }
+        public async Task<List<Order>> GetOrdersByUserIdAsync(Guid userId)
+        {
+            return await _context.Orders
+                .Where(o => o.UserId == userId)
+                .ToListAsync();
         }
     }
 }

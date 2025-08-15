@@ -1,4 +1,6 @@
-﻿using Fortune.Services;
+﻿using Fortune.Repository;
+using Fortune.Repository.Models;
+using Fortune.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fortune.Controllers
@@ -14,13 +16,13 @@ namespace Fortune.Controllers
             this.paymentService = paymentService;
         }
         [HttpPost("{id:guid}/checkout")]
-        public async Task<IActionResult> Checkout(Guid id)
+        public async Task<IActionResult> Checkout(Guid id, [FromQuery] string? guestEmail)
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             
             try
             {
-                var (checkoutUrl, orderCode) = await paymentService.CreateOrderAsync(id, userId);
+                var (checkoutUrl, orderCode) = await paymentService.CreateOrderAsync(id, userId, guestEmail);
                 return Ok(new { orderCode, checkoutUrl });
             }
             catch (Exception ex)
@@ -44,6 +46,6 @@ namespace Fortune.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-        }
+        }        
     }
 }

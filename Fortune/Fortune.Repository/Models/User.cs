@@ -29,7 +29,7 @@ public partial class User
     [Column("salt")]
     public string Salt { get; set; }
     [Column("phone")]
-    public long? Phone { get; set; }
+    public string? Phone { get; set; }
 
     [StringLength(255)]
     [Column("email")]

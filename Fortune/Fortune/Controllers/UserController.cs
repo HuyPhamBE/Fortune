@@ -19,11 +19,15 @@ namespace Fortune.Controllers
 
         private readonly IConfiguration configuration;
         private readonly UserService userService;
+        private readonly IPaymentService paymentService;
 
-        public UserController(IConfiguration configuration,UserService userService)
+        public UserController(IConfiguration configuration,
+            UserService userService,
+            IPaymentService paymentService)
         {
             this.configuration = configuration;
             this.userService = userService;
+            this.paymentService = paymentService;
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
@@ -95,7 +99,8 @@ namespace Fortune.Controllers
                 IsActive = true // Assuming the user is active by default
             };
 
-           await userService.CreateUserAsync(user, userRegisterRequest.Password);
+            await userService.CreateUserAsync(user, userRegisterRequest.Password);
+            await paymentService.ClaimOrdersForUserAsync(user.user_id, user.Email);
             return true;
         }
         [HttpGet("current-user")]
@@ -140,7 +145,7 @@ namespace Fortune.Controllers
             return Ok("User updated successfully.");
         }
         public sealed record UserLoginRequest(string UserName, string Password);
-        public sealed record UserRegisterRequest(string UserName, string Password, long? Phone, string Email,string FullName);
-        public sealed record UserUpdateRequest(string UserName, string Email, long? Phone, string FullName);
+        public sealed record UserRegisterRequest(string UserName, string Password, string? Phone, string Email,string FullName);
+        public sealed record UserUpdateRequest(string UserName, string Email, string? Phone, string FullName);
     }
 }

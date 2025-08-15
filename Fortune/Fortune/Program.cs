@@ -14,8 +14,6 @@ var builder = WebApplication.CreateBuilder(args);
         config["ApiKey"],
         config["ChecksumKey"]
     );
-
-//await payOS.confirmWebhook("https://fortune-wpfl.onrender.com/api/payos/webhook");
 builder.Services.AddSingleton(payOS);
 
 builder.Services.AddSingleton(provider =>
