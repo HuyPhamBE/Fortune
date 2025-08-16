@@ -1,5 +1,6 @@
 ﻿using Fortune.Repository.Models;
 using Fortune.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fortune.Controllers
@@ -14,12 +15,14 @@ namespace Fortune.Controllers
             this.orderService = orderService;            
         }
         [HttpGet("GetAllOrder")]
+        [Authorize(Roles ="3")]
         public async Task<IActionResult> GetAllOrder()
         {
             var orders = await orderService.GetAllOrder();            
             return Ok(orders);
         }
         [HttpGet("GetUserPurchasePackage/{userId}")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> GetUserPurchasePackage(Guid userId)
         {
             var packages = await orderService.GetUserPurchasePackageAsync(userId);
@@ -30,6 +33,7 @@ namespace Fortune.Controllers
             return Ok(packages);
         }
         [HttpPut("UpdateOrder/{id}")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> UpdateOrder(Guid id,[FromBody] Order order)
         {
             if (order == null)
@@ -47,6 +51,7 @@ namespace Fortune.Controllers
             }
         }
         [HttpPut("updateOrderContact/{id}")]
+        [Authorize(Roles = "3")]
         public async Task<IActionResult> UpdateOrderContact(Guid id)
         {
             try

@@ -23,6 +23,7 @@ namespace Fortune.Repository
                 .Include(o => o.Package)
                 .Select(o => new OrderDTO
                 {
+                    Id = o.Id,
                     UserName = o.User != null ? o.User.UserName : "guest",
                     FullName = o.User != null ? o.User.FullName : "",
                     Email = o.User != null ? o.User.Email : o.GuestEmail,
