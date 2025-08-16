@@ -1,4 +1,5 @@
 ﻿using Fortune.Repository;
+using Fortune.Repository.ModelExtension;
 using Fortune.Repository.Models;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ namespace Fortune.Services
 {
     public interface IOrderService
     {
-        public Task<List<Order>> GetAllOrder();
+        public Task<List<OrderDTO>> GetAllOrder();
         public Task<List<string?>> GetUserPurchasePackageAsync(Guid userId);
         public Task<int> updateOrder(Order order);
     }
@@ -23,7 +24,7 @@ namespace Fortune.Services
             this.orderRepository = orderRepository;
         }
 
-        public async Task<List<Order>> GetAllOrder()
+        public async Task<List<OrderDTO>> GetAllOrder()
         {
             return await orderRepository.GetAllOrdersAsync();
         }

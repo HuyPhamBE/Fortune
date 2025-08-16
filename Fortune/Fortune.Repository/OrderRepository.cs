@@ -1,5 +1,6 @@
 ﻿using Fortune.Repository.Basic;
 using Fortune.Repository.DBContext;
+using Fortune.Repository.ModelExtension;
 using Fortune.Repository.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -15,10 +16,18 @@ namespace Fortune.Repository
         public OrderRepository(FortuneContext context) : base(context)
         {
         }
-        public async Task<List<Order>> GetAllOrdersAsync()
+        public async Task<List<OrderDTO>> GetAllOrdersAsync()
         {
             return await _context.Orders
-                .Include(o=> o.User)
+                .Include(o => o.User)
+                .Include(o => o.Package)
+                .Select(o => new OrderDTO
+                {
+                    UserName = o.User != null ? o.User.UserName : "guest",
+                    FullName = o.User != null ? o.User.FullName : "",
+                    Email = o.User != null ? o.User.Email : o.GuestEmail,
+                    PackageName = o.Package.Name,
+                })
                 .ToListAsync();
         }
         public async Task<Order> GetOrderByIdAsync(Guid orderId)

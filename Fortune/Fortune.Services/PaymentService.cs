@@ -68,38 +68,52 @@ namespace Fortune.Services
 
         public async Task<(bool success, string reason)> VerifyWebhook(WebhookType payload)
         {
-            var data = payOS.verifyPaymentWebhookData(payload);
-            if (data == null)
+            try
             {
-                return (false, "Signature verification failed or payload invalid");
-            }
+                // First verify the webhook signature and get the data
+                var data = payOS.verifyPaymentWebhookData(payload);
+                if (data == null)
+                {
+                    return (false, "Signature verification failed or payload invalid");
+                }
 
-            if (data.code != "00")
+                // Now access orderCode from the verified data, not the payload
+                Console.WriteLine($"Webhook data verified: Code={data.code}, Desc={data.desc}, OrderCode={data.orderCode}");
+
+                if (data.code != "00")
+                {
+                    return (false, $"Unexpected code: {data.code}");
+                }
+
+                if (!data.desc.Equals("Thành công", StringComparison.OrdinalIgnoreCase))
+                {
+                    return (false, $"Unexpected description: {data.desc}");
+                }
+
+                // Use data.orderCode (from verified data) instead of payload.orderCode
+                var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
+                if (order == null)
+                {
+                    return (false, $"Order not found for orderCode {data.orderCode}");
+                }
+
+                if (order.Status == OrderStatus.Paid)
+                {
+                    return (false, "Order already marked as paid");
+                }
+
+                order.Status = OrderStatus.Paid;
+                order.PaidAt = DateTime.UtcNow;
+                await orderRepository.UpdateAsync(order);
+
+                return (true, "Order updated to Paid");
+            }
+            catch (Exception ex)
             {
-                return (false, $"Unexpected code: {data.code}");
+                Console.WriteLine($"Exception in VerifyWebhook: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                throw; // Re-throw to be caught by controller
             }
-
-            if (!data.desc.Equals("Thành công", StringComparison.OrdinalIgnoreCase))
-            {
-                return (false, $"Unexpected description: {data.desc}");
-            }
-
-            var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
-            if (order == null)
-            {
-                return (false, $"Order not found for orderCode {data.orderCode}");
-            }
-
-            if (order.Status == OrderStatus.Paid)
-            {
-                return (false, "Order already marked as paid");
-            }
-
-            order.Status = OrderStatus.Paid;
-            order.PaidAt = DateTime.UtcNow;
-            await orderRepository.UpdateAsync(order);
-
-            return (true, "Order updated to Paid");
         }
 
         public async Task<int> ClaimOrdersForUserAsync(Guid userId, string email)

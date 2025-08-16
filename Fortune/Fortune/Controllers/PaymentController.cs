@@ -30,12 +30,22 @@ namespace Fortune.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
         [HttpPost("webhook")]
-        public async Task<IActionResult> Webhook([FromBody] Net.payOS.Types.WebhookType payload)
+        public async Task<IActionResult> Webhook([FromBody] object rawPayload)
         {
+            var logger = HttpContext.RequestServices.GetService<ILogger<PaymentController>>();
+
             try
             {
-                var (success, reason) = await paymentService.VerifyWebhook(payload);
+                // Log raw payload as JSON
+                var json = System.Text.Json.JsonSerializer.Serialize(rawPayload);
+                logger?.LogInformation("Raw webhook payload: {Payload}", json);
+
+                // Convert to WebhookType
+                var webhookPayload = System.Text.Json.JsonSerializer.Deserialize<Net.payOS.Types.WebhookType>(json);
+
+                var (success, reason) = await paymentService.VerifyWebhook(webhookPayload);
 
                 if (success)
                 {
@@ -48,6 +58,7 @@ namespace Fortune.Controllers
             }
             catch (Exception ex)
             {
+                logger?.LogError(ex, "Exception in webhook processing");
                 return BadRequest(new { message = ex.Message });
             }
         }
