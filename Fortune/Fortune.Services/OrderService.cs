@@ -15,6 +15,7 @@ namespace Fortune.Services
         public Task<List<string?>> GetUserPurchasePackageAsync(Guid userId);
         public Task<int> updateOrder(Order order);
         public Task ExpireOrdersAsync();
+        public Task<Order> GetAllOrderById(Guid orderId);
     }
     public class OrderService : IOrderService
     {
@@ -28,6 +29,10 @@ namespace Fortune.Services
         public async Task<List<OrderDTO>> GetAllOrder()
         {
             return await orderRepository.GetAllOrdersAsync();
+        }
+        public async Task<Order> GetAllOrderById(Guid orderId)
+        {
+            return await orderRepository.GetOrderByIdAsync(orderId);
         }
         public async Task<List<string?>> GetUserPurchasePackageAsync(Guid userId)
         {

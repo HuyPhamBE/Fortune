@@ -46,5 +46,24 @@ namespace Fortune.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+        [HttpPut("updateOrderContact/{id}")]
+        public async Task<IActionResult> UpdateOrderContact(Guid id)
+        {
+            try
+            {
+                var existingOrder = await orderService.GetAllOrderById(id);
+                if (existingOrder == null)
+                {
+                    return NotFound("Order not found.");
+                }
+                existingOrder.contact = true;
+                var result = await orderService.updateOrder(existingOrder);
+                return Ok(new { message = "Order contact updated successfully", affectedRows = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

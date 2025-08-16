@@ -41,6 +41,7 @@ namespace Fortune.Repository.Models
         [Column("paidat")]
         public DateTime? PaidAt { get; set; }
         public DateTime ExpiryDate { get; set; }
+        public bool contact { get; set; } =false;
         [NotMapped]
         public bool IsExpired => DateTime.UtcNow > ExpiryDate;
         [ForeignKey("PackageId")]
