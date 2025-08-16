@@ -27,6 +27,7 @@ namespace Fortune.Repository
                     FullName = o.User != null ? o.User.FullName : "",
                     Email = o.User != null ? o.User.Email : o.GuestEmail,
                     PackageName = o.Package.Name,
+                    Status = o.Status.ToString(),
                 })
                 .ToListAsync();
         }
