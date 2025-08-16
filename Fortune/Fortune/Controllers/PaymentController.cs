@@ -45,21 +45,26 @@ namespace Fortune.Controllers
                 // Convert to WebhookType
                 var webhookPayload = System.Text.Json.JsonSerializer.Deserialize<Net.payOS.Types.WebhookType>(json);
 
+                logger?.LogInformation("Starting webhook verification process...");
                 var (success, reason) = await paymentService.VerifyWebhook(webhookPayload);
+
+                logger?.LogInformation("Webhook verification result: Success={Success}, Reason={Reason}", success, reason);
 
                 if (success)
                 {
+                    logger?.LogInformation("Webhook processed successfully");
                     return Ok(new { message = "Webhook verified successfully" });
                 }
                 else
                 {
+                    logger?.LogWarning("Webhook verification failed: {Reason}", reason);
                     return BadRequest(new { message = $"Webhook verification failed: {reason}" });
                 }
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "Exception in webhook processing");
-                return BadRequest(new { message = ex.Message });
+                logger?.LogError(ex, "Exception in webhook processing: {Message}", ex.Message);
+                return BadRequest(new { message = ex.Message, stackTrace = ex.ToString() });
             }
         }
 

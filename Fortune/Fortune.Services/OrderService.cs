@@ -14,6 +14,7 @@ namespace Fortune.Services
         public Task<List<OrderDTO>> GetAllOrder();
         public Task<List<string?>> GetUserPurchasePackageAsync(Guid userId);
         public Task<int> updateOrder(Order order);
+        
     }
     public class OrderService : IOrderService
     {

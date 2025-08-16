@@ -30,11 +30,11 @@ namespace Fortune.Repository
                 })
                 .ToListAsync();
         }
-        public async Task<Order> GetOrderByIdAsync(Guid orderId)
+        public async Task<Order?> GetOrderByIdAsync(Guid orderId)
         {
             return await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
         }
-        public async Task<Order> GetOrdersByOrderCodeAsync(long orderCode)
+        public async Task<Order?> GetOrdersByOrderCodeAsync(long orderCode)
         {
             return await _context.Orders.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
         }

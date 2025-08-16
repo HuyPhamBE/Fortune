@@ -70,52 +70,99 @@ namespace Fortune.Services
         {
             try
             {
+                Console.WriteLine("=== WEBHOOK VERIFICATION START ===");
+
                 // First verify the webhook signature and get the data
+                Console.WriteLine("Step 1: Verifying PayOS signature...");
                 var data = payOS.verifyPaymentWebhookData(payload);
                 if (data == null)
                 {
+                    Console.WriteLine("ERROR: PayOS signature verification failed");
                     return (false, "Signature verification failed or payload invalid");
                 }
+                Console.WriteLine("✅ PayOS signature verified successfully");
 
-                // Now access orderCode from the verified data, not the payload
-                Console.WriteLine($"Webhook data verified: Code={data.code}, Desc={data.desc}, OrderCode={data.orderCode}");
+                Console.WriteLine($"Step 2: Checking payment data - Code={data.code}, Desc='{data.desc}', OrderCode={data.orderCode}");
 
                 if (data.code != "00")
                 {
+                    Console.WriteLine($"ERROR: Unexpected payment code: {data.code}");
                     return (false, $"Unexpected code: {data.code}");
                 }
+                Console.WriteLine("✅ Payment code is valid (00)");
 
-                if (!data.desc.Equals("Thành công", StringComparison.OrdinalIgnoreCase))
+                // Check for "success" in English (as seen in your logs)
+                if (!data.desc.Equals("success", StringComparison.OrdinalIgnoreCase))
                 {
+                    Console.WriteLine($"ERROR: Unexpected description: '{data.desc}' (expected 'success')");
                     return (false, $"Unexpected description: {data.desc}");
                 }
+                Console.WriteLine("✅ Payment description is valid (success)");
 
-                // Use data.orderCode (from verified data) instead of payload.orderCode
-                var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
-                if (order == null)
+                Console.WriteLine($"Step 3: Looking up order in database with orderCode: {data.orderCode} (Type: {data.orderCode.GetType()})");
+                Console.WriteLine($"OrderCode value: {data.orderCode}");
+                Console.WriteLine($"OrderCode as string: '{data.orderCode.ToString()}'");
+
+                // Add detailed database lookup logging
+                try
                 {
-                    return (false, $"Order not found for orderCode {data.orderCode}");
-                }
+                    Console.WriteLine("Calling orderRepository.GetOrdersByOrderCodeAsync...");
+                    var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
+                    Console.WriteLine("Repository call completed");
 
-                if (order.Status == OrderStatus.Paid)
+                    if (order == null)
+                    {
+                        Console.WriteLine($"❌ ORDER NOT FOUND in database for orderCode: {data.orderCode}");
+
+                        // Let's try to debug this further
+                        Console.WriteLine("Attempting to list some orders for debugging...");
+                        try
+                        {
+                            // You might need to add this method to your repository or use a different approach
+                            // This is just for debugging - remove in production
+                            Console.WriteLine("Debug: Trying to find any orders with similar orderCodes...");
+                        }
+                        catch (Exception debugEx)
+                        {
+                            Console.WriteLine($"Debug query failed: {debugEx.Message}");
+                        }
+
+                        return (false, $"Order not found for orderCode {data.orderCode}");
+                    }
+
+                    Console.WriteLine($"✅ ORDER FOUND: ID={order.Id}, Status={order.Status}, Amount={order.Amount}, UserId={order.UserId}");
+
+                    if (order.Status == OrderStatus.Paid)
+                    {
+                        Console.WriteLine("⚠️ Order already marked as paid - no update needed");
+                        return (true, "Order already marked as paid - webhook processed successfully");
+                    }
+
+                    Console.WriteLine("Step 4: Updating order status to Paid...");
+                    order.Status = OrderStatus.Paid;
+                    order.PaidAt = DateTime.UtcNow;
+
+                    await orderRepository.UpdateAsync(order);
+                    Console.WriteLine("✅ Order successfully updated to Paid status");
+
+                    Console.WriteLine("=== WEBHOOK VERIFICATION SUCCESS ===");
+                    return (true, "Order updated to Paid");
+                }
+                catch (Exception dbEx)
                 {
-                    return (false, "Order already marked as paid");
+                    Console.WriteLine($"❌ DATABASE ERROR during order lookup: {dbEx.Message}");
+                    Console.WriteLine($"Database StackTrace: {dbEx.StackTrace}");
+                    throw; // This will be caught by the outer try-catch
                 }
-
-                order.Status = OrderStatus.Paid;
-                order.PaidAt = DateTime.UtcNow;
-                await orderRepository.UpdateAsync(order);
-
-                return (true, "Order updated to Paid");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception in VerifyWebhook: {ex.Message}");
+                Console.WriteLine($"❌ EXCEPTION in VerifyWebhook: {ex.Message}");
+                Console.WriteLine($"Exception Type: {ex.GetType().Name}");
                 Console.WriteLine($"StackTrace: {ex.StackTrace}");
                 throw; // Re-throw to be caught by controller
             }
         }
-
         public async Task<int> ClaimOrdersForUserAsync(Guid userId, string email)
         {
             if (string.IsNullOrEmpty(email))
