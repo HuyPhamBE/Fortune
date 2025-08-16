@@ -14,7 +14,7 @@ namespace Fortune.Services
         public Task<List<OrderDTO>> GetAllOrder();
         public Task<List<string?>> GetUserPurchasePackageAsync(Guid userId);
         public Task<int> updateOrder(Order order);
-        
+        public Task ExpireOrdersAsync();
     }
     public class OrderService : IOrderService
     {
@@ -44,5 +44,17 @@ namespace Fortune.Services
             existingOrder.UserId = order.UserId;
             return await orderRepository.UpdateAsync(existingOrder);
         }
+        public async Task ExpireOrdersAsync()
+        {
+            var expiredOrders = await orderRepository.GetExpiredOrdersAsync(DateTime.UtcNow);
+
+            foreach (var order in expiredOrders)
+            {
+                order.Status = OrderStatus.Expired;
+                await orderRepository.UpdateAsync(order);
+            }
+        }
+
+
     }
 }

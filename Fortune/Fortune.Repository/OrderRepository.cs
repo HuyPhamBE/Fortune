@@ -57,5 +57,12 @@ namespace Fortune.Repository
                 .Select(o => o.Package.Name)
                 .ToListAsync();
         }
+        public async Task<List<Order>> GetExpiredOrdersAsync(DateTime now)
+        {
+            return await _context.Orders
+                .Where(o => o.ExpiryDate <= now && o.Status == OrderStatus.Paid)
+                .ToListAsync();
+        }
+
     }
 }

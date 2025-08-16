@@ -40,7 +40,9 @@ namespace Fortune.Repository.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         [Column("paidat")]
         public DateTime? PaidAt { get; set; }
-
+        public DateTime ExpiryDate { get; set; }
+        [NotMapped]
+        public bool IsExpired => DateTime.UtcNow > ExpiryDate;
         [ForeignKey("PackageId")]
         [JsonIgnore]
         public Package Package { get; set; }

@@ -30,6 +30,8 @@ namespace Fortune
             services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<IPackageService, PackageService>();
             services.AddScoped<IOrderService, OrderService>();
+            services.AddHostedService<OrderExpiryBackgroundService>();
+
             services.AddScoped<UserService>();
 
         }

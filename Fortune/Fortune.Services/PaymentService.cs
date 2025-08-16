@@ -1,4 +1,5 @@
-﻿using Fortune.Repository;
+﻿using CloudinaryDotNet.Actions;
+using Fortune.Repository;
 using Fortune.Repository.Models;
 using Net.payOS;
 using Net.payOS.Types;
@@ -60,7 +61,8 @@ namespace Fortune.Services
                 Amount = package.price,
                 UserId = string.IsNullOrEmpty(userId) ? (Guid?)null : Guid.Parse(userId),
                 GuestEmail = guestEmail,
-                Description= $"Fortune payment for purchase {package.package_Id} for user {userId}"
+                Description= $"Fortune payment for purchase {package.package_Id} for user {userId}",
+                ExpiryDate = DateTime.UtcNow.AddMonths(1)
             };
             await orderRepository.CreateAsync(newOrder);
             return (created.checkoutUrl, orderCode);
@@ -70,97 +72,43 @@ namespace Fortune.Services
         {
             try
             {
-                Console.WriteLine("=== WEBHOOK VERIFICATION START ===");
-
-                // First verify the webhook signature and get the data
-                Console.WriteLine("Step 1: Verifying PayOS signature...");
+                // Verify PayOS signature
                 var data = payOS.verifyPaymentWebhookData(payload);
                 if (data == null)
                 {
-                    Console.WriteLine("ERROR: PayOS signature verification failed");
-                    return (false, "Signature verification failed or payload invalid");
+                    return (false, "Signature verification failed");
                 }
-                Console.WriteLine("✅ PayOS signature verified successfully");
 
-                Console.WriteLine($"Step 2: Checking payment data - Code={data.code}, Desc='{data.desc}', OrderCode={data.orderCode}");
-
-                if (data.code != "00")
+                // Quick validation checks
+                if (data.code != "00" || !data.desc.Equals("success", StringComparison.OrdinalIgnoreCase))
                 {
-                    Console.WriteLine($"ERROR: Unexpected payment code: {data.code}");
-                    return (false, $"Unexpected code: {data.code}");
+                    return (false, $"Payment failed: {data.code} - {data.desc}");
                 }
-                Console.WriteLine("✅ Payment code is valid (00)");
 
-                // Check for "success" in English (as seen in your logs)
-                if (!data.desc.Equals("success", StringComparison.OrdinalIgnoreCase))
+                // Fast database operation
+                var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
+                if (order == null)
                 {
-                    Console.WriteLine($"ERROR: Unexpected description: '{data.desc}' (expected 'success')");
-                    return (false, $"Unexpected description: {data.desc}");
+                    return (false, $"Order not found: {data.orderCode}");
                 }
-                Console.WriteLine("✅ Payment description is valid (success)");
 
-                Console.WriteLine($"Step 3: Looking up order in database with orderCode: {data.orderCode} (Type: {data.orderCode.GetType()})");
-                Console.WriteLine($"OrderCode value: {data.orderCode}");
-                Console.WriteLine($"OrderCode as string: '{data.orderCode.ToString()}'");
-
-                // Add detailed database lookup logging
-                try
+                if (order.Status == OrderStatus.Paid)
                 {
-                    Console.WriteLine("Calling orderRepository.GetOrdersByOrderCodeAsync...");
-                    var order = await orderRepository.GetOrdersByOrderCodeAsync(data.orderCode);
-                    Console.WriteLine("Repository call completed");
-
-                    if (order == null)
-                    {
-                        Console.WriteLine($"❌ ORDER NOT FOUND in database for orderCode: {data.orderCode}");
-
-                        // Let's try to debug this further
-                        Console.WriteLine("Attempting to list some orders for debugging...");
-                        try
-                        {
-                            // You might need to add this method to your repository or use a different approach
-                            // This is just for debugging - remove in production
-                            Console.WriteLine("Debug: Trying to find any orders with similar orderCodes...");
-                        }
-                        catch (Exception debugEx)
-                        {
-                            Console.WriteLine($"Debug query failed: {debugEx.Message}");
-                        }
-
-                        return (false, $"Order not found for orderCode {data.orderCode}");
-                    }
-
-                    Console.WriteLine($"✅ ORDER FOUND: ID={order.Id}, Status={order.Status}, Amount={order.Amount}, UserId={order.UserId}");
-
-                    if (order.Status == OrderStatus.Paid)
-                    {
-                        Console.WriteLine("⚠️ Order already marked as paid - no update needed");
-                        return (true, "Order already marked as paid - webhook processed successfully");
-                    }
-
-                    Console.WriteLine("Step 4: Updating order status to Paid...");
-                    order.Status = OrderStatus.Paid;
-                    order.PaidAt = DateTime.UtcNow;
-
-                    await orderRepository.UpdateAsync(order);
-                    Console.WriteLine("✅ Order successfully updated to Paid status");
-
-                    Console.WriteLine("=== WEBHOOK VERIFICATION SUCCESS ===");
-                    return (true, "Order updated to Paid");
+                    return (true, "Order already paid");
                 }
-                catch (Exception dbEx)
-                {
-                    Console.WriteLine($"❌ DATABASE ERROR during order lookup: {dbEx.Message}");
-                    Console.WriteLine($"Database StackTrace: {dbEx.StackTrace}");
-                    throw; // This will be caught by the outer try-catch
-                }
+
+                // Update order
+                order.Status = OrderStatus.Paid;
+                order.PaidAt = DateTime.UtcNow;
+                await orderRepository.UpdateAsync(order);
+
+                return (true, "Order updated successfully");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ EXCEPTION in VerifyWebhook: {ex.Message}");
-                Console.WriteLine($"Exception Type: {ex.GetType().Name}");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                throw; // Re-throw to be caught by controller
+                // Log error but don't include stack trace in return
+                Console.WriteLine($"Webhook error: {ex.Message}");
+                throw;
             }
         }
         public async Task<int> ClaimOrdersForUserAsync(Guid userId, string email)

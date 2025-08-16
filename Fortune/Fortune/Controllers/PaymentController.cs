@@ -34,37 +34,30 @@ namespace Fortune.Controllers
         [HttpPost("webhook")]
         public async Task<IActionResult> Webhook([FromBody] object rawPayload)
         {
-            var logger = HttpContext.RequestServices.GetService<ILogger<PaymentController>>();
-
             try
             {
-                // Log raw payload as JSON
-                var json = System.Text.Json.JsonSerializer.Serialize(rawPayload);
-                logger?.LogInformation("Raw webhook payload: {Payload}", json);
-
                 // Convert to WebhookType
+                var json = System.Text.Json.JsonSerializer.Serialize(rawPayload);
                 var webhookPayload = System.Text.Json.JsonSerializer.Deserialize<Net.payOS.Types.WebhookType>(json);
 
-                logger?.LogInformation("Starting webhook verification process...");
                 var (success, reason) = await paymentService.VerifyWebhook(webhookPayload);
-
-                logger?.LogInformation("Webhook verification result: Success={Success}, Reason={Reason}", success, reason);
 
                 if (success)
                 {
-                    logger?.LogInformation("Webhook processed successfully");
-                    return Ok(new { message = "Webhook verified successfully" });
+                    return Ok(new { message = "Webhook processed successfully" });
                 }
                 else
                 {
-                    logger?.LogWarning("Webhook verification failed: {Reason}", reason);
                     return BadRequest(new { message = $"Webhook verification failed: {reason}" });
                 }
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "Exception in webhook processing: {Message}", ex.Message);
-                return BadRequest(new { message = ex.Message, stackTrace = ex.ToString() });
+                // Only log critical errors
+                var logger = HttpContext.RequestServices.GetService<ILogger<PaymentController>>();
+                logger?.LogError("Webhook processing failed: {Message}", ex.Message);
+
+                return BadRequest(new { message = "Webhook processing failed" });
             }
         }
 
