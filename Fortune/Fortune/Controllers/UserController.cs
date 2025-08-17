@@ -2,6 +2,7 @@
 using Fortune.Repository.Helper;
 using Fortune.Repository.Models;
 using Fortune.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -48,6 +49,7 @@ namespace Fortune.Controllers
             return Ok(token);
         }
         [HttpGet("User")]
+        [Authorize(Roles = "3,2")]
         public async Task<IActionResult> GetAll()
         {
             var user = await userService.GetAllUserAccounts();
