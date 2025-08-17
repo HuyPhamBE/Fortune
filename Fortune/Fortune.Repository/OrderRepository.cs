@@ -29,6 +29,8 @@ namespace Fortune.Repository
                     Email = o.User != null ? o.User.Email : o.GuestEmail,
                     PackageName = o.Package.Name,
                     Status = o.Status.ToString(),
+                    contact = o.contact
+
                 })
                 .ToListAsync();
         }
@@ -52,11 +54,12 @@ namespace Fortune.Repository
                 .Where(o => o.UserId == userId)
                 .ToListAsync();
         }
-        public async Task<List<string?>> getPackageUserPurchased(Guid id)
+        public async Task<List<Package>> getPackageUserPurchased(Guid id)
         {
             return await _context.Orders
                 .Where(o => o.UserId == id && o.Status == OrderStatus.Paid)
-                .Select(o => o.Package.Name)
+                .Select(o => o.Package)
+                .Distinct()
                 .ToListAsync();
         }
         public async Task<List<Order>> GetExpiredOrdersAsync(DateTime now)
@@ -65,6 +68,5 @@ namespace Fortune.Repository
                 .Where(o => o.ExpiryDate <= now && o.Status == OrderStatus.Paid)
                 .ToListAsync();
         }
-
     }
 }

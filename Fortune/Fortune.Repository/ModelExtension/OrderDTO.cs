@@ -14,5 +14,6 @@ namespace Fortune.Repository.ModelExtension
         public string Email { get; set; }
         public string PackageName { get; set; }
         public string Status { get; set; }
+        public bool contact { get; set; }
     }
 }

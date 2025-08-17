@@ -37,7 +37,6 @@ namespace Fortune.Services
         {
             return await packageRepository.GetPackageByIdAsync(packageId);
         }
-
         public async Task<int> UpdatePackageAsync(Package package)
         {
             return await packageRepository.UpdateAsync(package);

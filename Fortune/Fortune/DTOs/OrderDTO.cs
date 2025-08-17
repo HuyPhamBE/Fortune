@@ -1,6 +1,6 @@
 ﻿using Fortune.Repository.Models;
 
-namespace Fortune.Controllers
+namespace Fortune.DTOs
 { 
     public class OrderDTO
     {
