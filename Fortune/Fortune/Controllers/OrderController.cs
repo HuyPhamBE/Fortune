@@ -22,7 +22,7 @@ namespace Fortune.Controllers
             return Ok(orders);
         }
         [HttpGet("GetUserPurchasePackage/{userId}")]
-        [Authorize(Roles = "3")]
+        [Authorize(Roles = "3,2,1")]
         public async Task<IActionResult> GetUserPurchasePackage(Guid userId)
         {
             var packages = await orderService.GetUserPurchasePackageAsync(userId);
